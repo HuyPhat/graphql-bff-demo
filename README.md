@@ -58,6 +58,28 @@ npm run dev          # server :4000 + client :5173 (concurrently)
 - Playground/endpoint: http://localhost:4000/graphql (run the `feed` query below)
 - Client app: http://localhost:5173
 
+## Run it with Docker (any machine)
+
+Single container serves both the built React client **and** the GraphQL BFF from one
+port — no proxy, no second process:
+
+```bash
+docker compose up --build
+# open http://localhost:4000
+```
+
+Or plain Docker:
+
+```bash
+docker build -t graphql-bff-demo .
+docker run -p 4000:4000 graphql-bff-demo
+```
+
+The image is multi-stage (build → prod-deps → slim runtime, ~275 MB) and binds
+`0.0.0.0`, so the same command works on any Docker host. In the container the
+Express server serves `client/dist` statically and exposes `/graphql` on the same
+origin — the production shape of a real BFF deployment.
+
 Try this query in the playground:
 
 ```graphql
@@ -83,13 +105,15 @@ server/
     resolvers.ts           # field resolvers + ServerContext wiring
     services/feed-service.ts   # BFF composition logic (the interesting part)
     datasources/{user,post}-api.ts   # RESTDataSource wrappers for upstream REST
-    index.ts               # Apollo Server boot
+    index.ts               # Express + Apollo Server boot; serves client/dist too
 client/
   src/
     apollo.ts              # ApolloClient -> /graphql (Vite-proxied to :4000)
     graphql.ts             # FEED_QUERY + result types
     components/Feed.tsx    # renders the composed feed
     App.tsx
+Dockerfile                 # multi-stage image: build -> prod deps -> runtime
+compose.yml                # single container, :4000
 ```
 
 ## Clean architecture notes

@@ -1,0 +1,10 @@
+services:
+  bff:
+    build: .
+    image: graphql-bff-demo
+    container_name: graphql-bff-demo
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+    restart: unless-stopped
